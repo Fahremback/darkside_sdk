@@ -1,5 +1,18 @@
 #include "skins.hpp"
 
+// Offset dinâmico para paint kit - atualizado via pattern scanning para 2024-2026
+static uintptr_t g_paintkit_offset = 0;
+
+static void initialize_paintkit_offset( ) {
+	static bool initialized = false;
+	if ( !initialized ) {
+		// Pattern para encontrar offset do use_old_model em CPaintKit
+		auto pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "80 79 ? ? 0F 85 ? ? ? ? 48 8B 01 FF 90 ? ? ? ?", 0x2 );
+		g_paintkit_offset = pattern ? *reinterpret_cast<int32_t*>( pattern ) : 0xB2;
+		initialized = true;
+	}
+}
+
 void c_skins::dump_items( ) {
     auto item_schema = g_interfaces->m_client->get_econ_item_system( )->get_econ_item_schema( );
     if ( !item_schema )
@@ -196,7 +209,7 @@ void c_skins::knife_changer( int stage ) {
 
         if ( current_skin->m_paint_kit > 0 ) {
             auto paint_kit = item_schema->m_paint_kits.find_by_key( current_skin->m_paint_kit );
-            bool use_old_model = paint_kit.has_value( ) && *reinterpret_cast<bool*>( reinterpret_cast<uintptr_t>( paint_kit.value( ) ) + 0xB2 );
+            bool use_old_model = paint_kit.has_value( ) && *reinterpret_cast<bool*>( reinterpret_cast<uintptr_t>( paint_kit.value( ) ) + g_paintkit_offset );
 
             uint64_t mesh_mask = 1 + static_cast<uint64_t>( use_old_model );
 
