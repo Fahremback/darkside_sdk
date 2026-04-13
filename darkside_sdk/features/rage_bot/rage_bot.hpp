@@ -48,7 +48,10 @@ struct lag_record_t {
 
 		setup_bones( m_skeleton, 128 );
 
-		std::memcpy( m_bone_data, skeleton_instance->m_bone_cache, sizeof( matrix2x4_t ) * skeleton_instance->m_bone_count );
+		int bone_count = skeleton_instance->get_bone_count( );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
+			std::memcpy( m_bone_data, skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		}
 
 		m_simulation_time = pawn->m_sim_time( );
 		m_vec_mins = collision->m_mins( );
@@ -70,9 +73,11 @@ struct lag_record_t {
 		if ( !skeleton_instance )
 			return;
 
-		std::memcpy( m_bone_data_backup, skeleton_instance->m_bone_cache, sizeof( matrix2x4_t ) * skeleton_instance->m_bone_count );
-
-		std::memcpy( skeleton_instance->m_bone_cache, m_bone_data, sizeof( matrix2x4_t ) * skeleton_instance->m_bone_count );
+		int bone_count = skeleton_instance->get_bone_count( );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
+			std::memcpy( m_bone_data_backup, skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+			std::memcpy( skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, m_bone_data, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		}
 	}
 
 	inline void reset( c_cs_player_pawn* pawn ) {
@@ -87,7 +92,10 @@ struct lag_record_t {
 		if ( !skeleton_instance )
 			return;
 
-		std::memcpy( skeleton_instance->m_bone_cache, m_bone_data_backup, sizeof( matrix2x4_t ) * skeleton_instance->m_bone_count );
+		int bone_count = skeleton_instance->get_bone_count( );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
+			std::memcpy( skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, m_bone_data_backup, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		}
 	}
 
 	bool is_valid( ) {

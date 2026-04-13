@@ -24,10 +24,11 @@ void c_anti_hit::at_target( float& yaw ) {
 		if ( !entity || !entity->is_alive( ) || !entity->m_scene_node( ) )
 			continue;
 
-		float distance = entity->m_scene_node( )->m_origin( ).dist( shoot_pos );
+		// Otimizado: Usar dist_sqr para evitar sqrt desnecessário
+		float distance_sqr = entity->m_scene_node( )->m_origin( ).dist_sqr( shoot_pos );
 
-		if ( distance < best_distance ) {
-			best_distance = distance;
+		if ( distance_sqr < best_distance * best_distance ) {
+			best_distance = std::sqrt( distance_sqr );
 			best_target = entity;
 		}
 	}

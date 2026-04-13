@@ -26,9 +26,11 @@ uintptr_t __stdcall start_address( const HMODULE h_module ) {
 
     LOG_SUCCESS( xorstr_( "[*] DarkSide successfully injected!\n" ) );
 
-    while ( !GetAsyncKeyState( VK_END ) )
+    // Otimizado: Loop mais responsivo com verificação de bit de estado
+    while ( !( GetAsyncKeyState( VK_END ) & 0x8000 ) )
     {
-        Sleep( 100 );
+        // Reduzido de 100ms para 10ms para melhor responsividade
+        Sleep( 10 );
     }
 
     destroy( h_module );

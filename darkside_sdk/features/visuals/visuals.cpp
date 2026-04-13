@@ -141,8 +141,8 @@ void c_visuals::store_players( ) {
 void c_visuals::handle_players( ) {
 	const std::unique_lock<std::mutex> m( m_player_mutex );
 
-	for ( auto it = m_player_map.begin( ); it != m_player_map.end( ); it = std::next( it ) ) {
-		player_info_t& player_info = it->second;
+	// Otimizado: Iteração por referência para evitar overhead de std::next
+	for ( auto& [ handle, player_info ] : m_player_map ) {
 		if ( !player_info.m_valid )
 			continue;
 
