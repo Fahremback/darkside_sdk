@@ -108,7 +108,11 @@ lag_record_t* c_rage_bot::select_record( int handle ) {
 	if ( !g_ctx->m_local_pawn->is_alive( ) )
 		return nullptr;
 
-	auto& records = m_lag_records[ handle ];
+	auto it = m_lag_records.find( handle );
+	if ( it == m_lag_records.end( ) )
+		return nullptr;
+
+	auto& records = it->second;
 
 	if ( records.empty( ) )
 		return nullptr;
@@ -119,30 +123,28 @@ lag_record_t* c_rage_bot::select_record( int handle ) {
 	if ( records.size( ) == 1u )
 		return last_record;
 
-	for ( auto i = records.begin( ); i != records.end( ); i = std::next( i ) ) {
-		auto record = &*i;
+	// Otimizado: Iteração por índice para evitar overhead de std::next
+	for ( size_t i = 0; i < records.size( ); ++i ) {
+		auto record = &records[ i ];
 
 		if ( !record->m_pawn || !record->is_valid( ) )
 			continue;
 
-		if ( !record || !record->is_valid( ) )
-			continue;
-
 		if ( !best_record ) {
 			best_record = record;
-
 			continue;
 		}
 
+		// Prioridade: throwing > onground > outros
 		if ( record->m_throwing ) {
 			best_record = record;
-
 			continue;
 		}
 
-		if ( ( record->m_pawn->m_flags( ) & FL_ONGROUND ) != ( record->m_pawn->m_flags( ) & FL_ONGROUND ) ) {
-			if ( ( record->m_pawn->m_flags( ) & FL_ONGROUND ) )
-				best_record = record;
+		// Verificação corrigida: comparar flags entre registros diferentes
+		if ( ( record->m_pawn->m_flags( ) & FL_ONGROUND ) && 
+		     !( best_record->m_pawn->m_flags( ) & FL_ONGROUND ) ) {
+			best_record = record;
 		}
 	}
 
@@ -197,23 +199,22 @@ aim_target_t* c_rage_bot::get_nearest_target( ) {
 
 	float best_distance = FLT_MAX;
 
-	for ( auto it = m_aim_targets.begin( ); it != m_aim_targets.end( ); it = std::next( it ) ) {
-		aim_target_t* target = &it->second;
-
-		if ( !target->m_lag_record
-			|| !target->m_lag_record->m_pawn
-			|| !target->m_lag_record->m_pawn->is_player_pawn( )
-			|| !target->m_pawn->is_alive( )
-			|| !target->m_lag_record->m_pawn->m_scene_node( ) ) {
-
+	// Otimizado: Iteração por referência para evitar cópias e std::next
+	for ( auto& [ handle, target ] : m_aim_targets ) {
+		if ( !target.m_lag_record
+			|| !target.m_lag_record->m_pawn
+			|| !target.m_lag_record->m_pawn->is_player_pawn( )
+			|| !target.m_pawn->is_alive( )
+			|| !target.m_lag_record->m_pawn->m_scene_node( ) ) {
 			continue;
 		}
 
-		float distance = target->m_lag_record->m_pawn->m_scene_node( )->m_origin( ).dist( shoot_pos );
+		// Otimizado: Usar dist_sqr para evitar sqrt desnecessário
+		float distance_sqr = target.m_lag_record->m_pawn->m_scene_node( )->m_origin( ).dist_sqr( shoot_pos );
 
-		if ( distance < best_distance ) {
-			best_distance = distance;
-			best_target = target;
+		if ( distance_sqr < best_distance * best_distance ) {
+			best_distance = std::sqrt( distance_sqr );
+			best_target = &target;
 		}
 	}
 
@@ -233,7 +234,10 @@ float c_rage_bot::calc_point_scale( vec3_t& point, const float& hitbox_radius ) 
 		return 0.f;
 
 	float spread = local_data->m_spread + local_data->m_inaccuracy;
-	float distance = point.dist( local_data->m_eye_pos );
+	
+	// Otimizado: Usar dist_sqr e calcular sqrt apenas uma vez
+	float distance_sqr = point.dist_sqr( local_data->m_eye_pos );
+	float distance = std::sqrt( distance_sqr );
 
 	float new_distance = distance / std::sin( deg2rad( 90.f - rad2deg( spread ) ) );
 	float scale = ( ( hitbox_radius - new_distance * spread ) + 0.1f ) * 100.f;
@@ -571,7 +575,9 @@ int c_rage_bot::calculate_hit_chance( c_cs_player_pawn* pawn, vec3_t angles, c_b
 
 	vec3_t shoot_pos = local_data->m_eye_pos;
 
-	if ( shoot_pos.dist( angles ) > weapon_data->m_range( ) )
+	// Otimizado: Usar dist_sqr para evitar sqrt desnecessário na comparação
+	float range = weapon_data->m_range( );
+	if ( shoot_pos.dist_sqr( angles ) > ( range * range ) )
 		return 0;
 
 	active_weapon->update_accuracy_penality( );

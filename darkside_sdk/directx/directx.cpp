@@ -24,7 +24,7 @@ void c_directx::initialize( ) {
 	if ( !next_ptr )
 		return;
 
-	m_swap_chain = *reinterpret_cast<IDXGISwapChain**>( next_ptr + 0x170 );
+	m_swap_chain = *reinterpret_cast<IDXGISwapChain**>( next_ptr + g_swapchain_offset );
 	if ( !m_swap_chain )
 		return;
 

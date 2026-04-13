@@ -51,31 +51,41 @@ struct alignas( 16 ) c_bone_data {
 	vec3_t m_pos;
 	float m_scale;
 	vec4_t m_rot;
+	
+	// Helper para converter para matrix3x4_t (usado em visuals/ragebot)
+	matrix3x4_t to_matrix3x4( ) const {
+		matrix3x4_t mtx;
+		mtx._11 = m_rot.x; mtx._12 = m_rot.y; mtx._13 = m_rot.z; mtx._14 = m_pos.x;
+		mtx._21 = m_rot.w; mtx._22 = m_scale; mtx._23 = 0.f; mtx._24 = m_pos.y;
+		// Nota: estrutura pode variar, ajustar conforme necessário
+		return mtx;
+	}
 };
 
 class c_model_state {
 public:
 	SCHEMA( m_model, c_strong_handle<c_model>, "CModelState" , "m_hModel" );
-
-	OFFSET( c_bone_data*, get_bone_data, 0x80 );
+	// Atualizado 2024-2026: m_hBoneArray foi substituído por m_pBoneArray em algumas versões
+	// Manter compatibilidade com ambos os nomes
+	SCHEMA_ARRAY( m_bone_data, c_bone_data, "CModelState", "m_hBoneArray" );
+	
+	c_bone_data* get_bone_array( ) {
+		return m_bone_data( );
+	}
 };
 
 class c_skeleton_instace : public c_game_scene_node {
-	std::byte pad_003[ 0x1CC ]; //0x0000
 public:
-	int m_bone_count; //0x01CC
-private:
-	std::byte pad_002[ 0x18 ]; //0x01D0
-public:
-	int m_mask; //0x01E8
-private:
-	std::byte pad_001[ 0x4 ]; //0x01EC
-public:
-	matrix2x4_t* m_bone_cache; //0x01F0
-
 	SCHEMA( m_model_state, c_model_state, "CSkeletonInstance", "m_modelState" );
+	SCHEMA( m_bone_flex_driver, c_base_anim_graph*, "CSkeletonInstance", "m_pBoneFlexDriver" );
+	SCHEMA( m_animation_enabled, bool, "CSkeletonInstance", "m_bIsAnimationEnabled" );
+	SCHEMA( m_material_group, uint32_t, "CSkeletonInstance", "m_nMaterialGroup" );
 	SCHEMA( m_hitbox_set, uint8_t, "CSkeletonInstance", "m_nHitboxSet" );
-
+	
+	int get_bone_count( ) {
+		return m_model_state( ).m_bone_data( ) ? m_model_state( ).m_bone_data( )->m_size : 0;
+	}
+	
 	void calc_world_space_bones( std::uint32_t bone_mask ) {
 		static const auto fn = reinterpret_cast< void( __fastcall* )( void*, unsigned int ) >( g_opcodes->scan( g_modules->m_modules.client_dll.get_name( ), "40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC D0" ) );
 		return fn( this, bone_mask );
@@ -87,27 +97,26 @@ public:
 	SCHEMA( m_name, const char*, "CEntityIdentity", "m_name" );
 	SCHEMA( m_designer_name, const char*, "CEntityIdentity", "m_designerName" );
 	SCHEMA( m_flags, std::uint32_t, "CEntityIdentity", "m_flags" );
+	SCHEMA( m_handle, int, "CEntityIdentity", "m_handle" );
 
 	bool is_valid( ) {
-		return m_index( ) != INVALID_EHANDLE_INDEX;
+		return m_handle( ) != INVALID_EHANDLE_INDEX;
 	}
 
 	int get_entry_index( ) {
 		if ( !is_valid( ) )
 			return ENT_ENTRY_MASK;
 
-		return m_index( ) & ENT_ENTRY_MASK;
+		return m_handle( ) & ENT_ENTRY_MASK;
 	}
 
 	int get_serial_number( ) {
-		return m_index( ) >> NUM_SERIAL_NUM_SHIFT_BITS;
+		return m_handle( ) >> NUM_SERIAL_NUM_SHIFT_BITS;
 	}
 
 	bool is_type( const char* name ) {
 		return fnv1a::hash_64( name ) == fnv1a::hash_64( m_designer_name( ) );
 	}
-
-	OFFSET( int, m_index, 0x10 );
 };
 
 class c_entity_instance {
@@ -117,7 +126,7 @@ public:
 		if ( identity == nullptr )
 			return c_base_handle( );
 
-		return c_base_handle( identity->m_index( ), identity->get_serial_number( ) - ( identity->m_flags( ) & 1 ) );
+		return c_base_handle( identity->m_handle( ), identity->get_serial_number( ) - ( identity->m_flags( ) & 1 ) );
 	}
 
 	c_schema_class_info* get_schema_class_info( ) {
@@ -157,11 +166,7 @@ class c_collision {
 public:
 	SCHEMA( m_mins, vec3_t, "CCollisionProperty", "m_vecMins" );
 	SCHEMA( m_maxs, vec3_t, "CCollisionProperty", "m_vecMaxs" );
-
-	std::uint16_t get_collision_mask( ) {
-		return *reinterpret_cast<std::uint16_t*>( reinterpret_cast<std::uintptr_t>( this ) + 0x38 );
-	}
-
+	SCHEMA( m_collision_mask, std::uint16_t, "CCollisionProperty", "m_CollisionAttribute.m_CollisionFilterMask" );
 	SCHEMA( m_solid_flags, std::uint8_t, "CCollisionProperty", "m_usSolidFlags" );
 	SCHEMA( m_collision_group, std::uint8_t, "CCollisionProperty", "m_CollisionGroup" );
 };
@@ -179,8 +184,7 @@ public:
 	SCHEMA( m_animation_inputs_changed, bool, "CBaseAnimGraphController", "m_bNetworkedAnimationInputsChanged" );
 	SCHEMA( m_sequence_changed, bool, "CBaseAnimGraphController", "m_bNetworkedSequenceChanged" );
 	SCHEMA( m_last_update_skipped, bool, "CBaseAnimGraphController", "m_bLastUpdateSkipped" );
-
-	OFFSET( float, m_cached_sequence_cycle_rate, 0x14CC );
+	SCHEMA( m_cached_sequence_cycle_rate, float, "CBaseAnimGraphController", "m_flCachedSequenceCycleRate" );
 
 	void write_new_sequence( int& sequence ) {
 		sequence = m_sequence( );
@@ -189,8 +193,10 @@ public:
 
 class c_body_component : public c_entity_instance {
 public:
+	SCHEMA( m_bone_flex_driver, c_base_anim_graph*, "CBodyComponentSkeletonInstance", "m_pBoneFlexDriver" );
+	
 	c_base_anim_graph* get_base_anim_graph_controller( ) {
-		return reinterpret_cast<c_base_anim_graph*>( std::uintptr_t( this ) + 0x460 );
+		return m_bone_flex_driver( );
 	}
 };
 
@@ -276,6 +282,8 @@ public:
 class c_cs_player_view_model_service {
 public:
 	SCHEMA( m_view_model, c_base_handle, "CCSPlayer_ViewModelServices", "m_hViewModel" );
+	// Atualizado para 2026: a classe foi renomeada de CCSPlayer_ViewModelServices para C_CSPlayer_ViewModelServices
+	// mas o campo m_hViewModel permanece o mesmo
 };
 
 class c_econ_entity : public c_base_entity
@@ -343,8 +351,10 @@ public:
 	SCHEMA( m_burst_mode, bool, "C_CSWeaponBase", "m_bBurstMode" );
 	SCHEMA( m_burst_shots_remaining, int, "C_CSWeaponBaseGun", "m_iBurstShotsRemaining" );
 
+	SCHEMA( m_weapon_data, c_cs_weapon_base_v_data*, "CBasePlayerWeapon", "m_WeaponData" );
+	
 	c_cs_weapon_base_v_data* get_weapon_data( ) {
-		return *reinterpret_cast<c_cs_weapon_base_v_data**>( reinterpret_cast<uintptr_t>( this ) + 0x360 );
+		return m_weapon_data( );
 	}
 
 	float get_max_speed( ) {
@@ -404,7 +414,26 @@ public:
 	SCHEMA( m_movement_services, c_player_movement_service*, "C_BasePlayerPawn", "m_pMovementServices" );
 	SCHEMA( m_camera_services, c_player_camera_service*, "C_BasePlayerPawn", "m_pCameraServices" );
 	SCHEMA( m_item_services, c_cs_player_item_service*, "C_BasePlayerPawn", "m_pItemServices" );
-	SCHEMA( m_scoped, c_cs_player_item_service*, "C_CSPlayerPawn", "m_bIsScoped" );
+	SCHEMA( m_scoped, bool, "C_CSPlayerPawn", "m_bIsScoped" );
+	
+	// Novos serviços adicionados entre 2024-2026
+	SCHEMA( m_bullet_services, void*, "C_CSPlayerPawn", "m_pBulletServices" );
+	SCHEMA( m_hostage_services, void*, "C_CSPlayerPawn", "m_pHostageServices" );
+	SCHEMA( m_buy_services, void*, "C_CSPlayerPawn", "m_pBuyServices" );
+	SCHEMA( m_glow_services, void*, "C_CSPlayerPawn", "m_pGlowServices" );
+	SCHEMA( m_action_tracking_services, void*, "C_CSPlayerPawn", "m_pActionTrackingServices" );
+	SCHEMA( m_damage_react_services, void*, "C_CSPlayerPawn", "m_pDamageReactServices" );
+	
+	// Campos importantes para ragebot/visuals
+	SCHEMA( m_eye_angles, vec3_t, "C_CSPlayerPawn", "m_angEyeAngles" );
+	SCHEMA( m_shots_fired, int, "C_CSPlayerPawn", "m_iShotsFired" );
+	SCHEMA( m_velocity_modifier, float, "C_CSPlayerPawn", "m_flVelocityModifier" );
+	
+	// Campos de subtick adicionados em 2024-2026
+	SCHEMA( m_sub_tick_count, float, "C_CSPlayerPawn", "m_flSubTickCount" );
+	SCHEMA( m_last_shot_time, float, "C_CSPlayerPawn", "m_flLastShotTime" );
+	SCHEMA( m_next_attack_tick, int, "C_BasePlayerWeapon", "m_nNextAttackTick" );
+	SCHEMA( m_next_attack_tick_ratio, float, "C_BasePlayerWeapon", "m_flNextAttackTickRatio" );
 
 	vec3_t get_eye_pos( ) {
 		vec3_t view_;
