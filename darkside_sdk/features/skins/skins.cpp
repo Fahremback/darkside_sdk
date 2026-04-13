@@ -6,8 +6,8 @@ static uintptr_t g_paintkit_offset = 0;
 static void initialize_paintkit_offset( ) {
 	static bool initialized = false;
 	if ( !initialized ) {
-		// Pattern para encontrar offset do use_old_model em CPaintKit
-		auto pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "80 79 ? ? 0F 85 ? ? ? ? 48 8B 01 FF 90 ? ? ? ?", 0x2 );
+		// Pattern para encontrar offset do use_old_model em CPaintKit - Atualizado Abril 2026
+		auto pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "80 79 ? ? 0F 85 ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 48 8D 0D", 0x2 );
 		g_paintkit_offset = pattern ? *reinterpret_cast<int32_t*>( pattern ) : 0xB2;
 		initialized = true;
 	}

@@ -7,12 +7,12 @@ static uintptr_t g_offset_input_history = 0;
 static void initialize_protobuf_offsets( ) {
 static bool initialized = false;
 if ( !initialized ) {
-// Pattern para m_MoveSteps em CUserCmdPB
-auto move_steps_pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "48 8D 90 ? ? ? ? 48 8B 01 FF 90 ? ? ? ?", 0x3 );
+// Pattern para m_MoveSteps em CUserCmdPB - Atualizado Abril 2026
+auto move_steps_pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "48 8D 90 ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 48 8D 0D", 0x3 );
 g_offset_move_steps = move_steps_pattern ? *reinterpret_cast<int32_t*>( move_steps_pattern ) : 0x20;
 
-// Pattern para m_InputHistory em CUserCmdPB  
-auto input_history_pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "48 8D 88 ? ? ? ? 48 8B 01 FF 90 ? ? ? ?", 0x3 );
+// Pattern para m_InputHistory em CUserCmdPB - Atualizado Abril 2026
+auto input_history_pattern = g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "48 8D 88 ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 48 8D 0D", 0x3 );
 g_offset_input_history = input_history_pattern ? *reinterpret_cast<int32_t*>( input_history_pattern ) : 0x28;
 
 initialized = true;
@@ -48,13 +48,13 @@ CSGOInterpolationInfoPB* c_protobuf::create_new_interps( CSGOInterpolationInfoPB
 if ( !mutable_interpolation_info->GetArena( ) )
 return nullptr;
 
-CSGOInterpolationInfoPB* interpolation_info_pb = reinterpret_cast<CSGOInterpolationInfoPB *( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 89 46 58 8B 45 AF" ), 0x1 ) )( mutable_interpolation_info->GetArena( ) );
+CSGOInterpolationInfoPB* interpolation_info_pb = reinterpret_cast<CSGOInterpolationInfoPB *( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 89 46 58 8B 45 AF 48 8D 0D" ), 0x1 ) )( mutable_interpolation_info->GetArena( ) );
 return interpolation_info_pb;
 }
 
 c_csgo_input_history_entry_pb* c_protobuf::create_new_input_history( google::protobuf::repeated_ptr_field_t<c_csgo_input_history_entry_pb>* rept_ptr, void* arena ) {
-static auto fn_create_new_input_history = reinterpret_cast<c_csgo_input_history_entry_pb * ( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 48 8D 4E ? E8 ? ? ? ? 4C 8B F0" ), 0x1 ) );
-static auto fn_add_element_to_rep_field_container = reinterpret_cast<c_csgo_input_history_entry_pb * ( __fastcall* )( google::protobuf::repeated_ptr_field_t<c_csgo_input_history_entry_pb>*, void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 8B 4A ? F3 41 0F 10 47" ), 0x1 ) );
+static auto fn_create_new_input_history = reinterpret_cast<c_csgo_input_history_entry_pb * ( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 48 8D 4E ? E8 ? ? ? ? 4C 8B F0 48" ), 0x1 ) );
+static auto fn_add_element_to_rep_field_container = reinterpret_cast<c_csgo_input_history_entry_pb * ( __fastcall* )( google::protobuf::repeated_ptr_field_t<c_csgo_input_history_entry_pb>*, void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 8B 4A ? F3 41 0F 10 47 ?" ), 0x1 ) );
 
 auto input_history = fn_create_new_input_history( arena );
 
@@ -62,8 +62,8 @@ return fn_add_element_to_rep_field_container( rept_ptr, input_history );
 }
 
 c_subtick_move_step* c_protobuf::create_new_subtick_move_step( google::protobuf::repeated_ptr_field_t<c_subtick_move_step>* rept_ptr, void* arena ) {
-static auto fn_create_new_subtick_move_step = reinterpret_cast<c_subtick_move_step * ( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 48 8D 4F ? E8 ? ? ? ? 48 8B D0" ), 0x1 ) );
-static auto fn_add_element_to_rep_field_container = reinterpret_cast<c_subtick_move_step * ( __fastcall* )( google::protobuf::repeated_ptr_field_t<c_subtick_move_step>*, void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 8B 4A ? F3 41 0F 10 46" ), 0x1 ) );
+static auto fn_create_new_subtick_move_step = reinterpret_cast<c_subtick_move_step * ( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 48 8D 4F ? E8 ? ? ? ? 48 8B D0 48" ), 0x1 ) );
+static auto fn_add_element_to_rep_field_container = reinterpret_cast<c_subtick_move_step * ( __fastcall* )( google::protobuf::repeated_ptr_field_t<c_subtick_move_step>*, void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? 48 8B D0 8B 4A ? F3 41 0F 10 46 ?" ), 0x1 ) );
 
 auto subtick_move = fn_create_new_subtick_move_step( arena );
 

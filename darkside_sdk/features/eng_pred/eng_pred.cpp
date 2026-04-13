@@ -50,7 +50,7 @@ void c_eng_pred::predict( ) {
 
 	g_ctx->m_local_pawn->m_movement_services( )->set_prediction_command( g_ctx->m_user_cmd );
 
-	static auto process_movement = reinterpret_cast<void* ( __fastcall* )( void*, c_user_cmd* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 48 8B 06 48 8B CE FF 90 ? ? ? ? 44 38 63", 0x1 ) );
+	static auto process_movement = reinterpret_cast<void* ( __fastcall* )( void*, c_user_cmd* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 48 8B F1 48 8B DA FF 90 ? ? ? ? 44 38 63", 0x1 ) );
 
 	/* premium fixes */
 	g_ctx->m_local_controller->physics_run_think( );
@@ -76,7 +76,7 @@ void c_eng_pred::end( ) {
 	if ( !client_info->m_local_data )
 		return;
 
-	static auto interpolate_shoot_position = reinterpret_cast<void* ( __fastcall* )( void*, vec3_t*, int, float )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 41 8B 86 ? ? ? ? C1 E8 ? A8 ? 0F 85", 0x1 ) );
+	static auto interpolate_shoot_position = reinterpret_cast<void* ( __fastcall* )( void*, vec3_t*, int, float )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 41 8B 86 ? ? ? ? C1 E8 ? A8 ? 0F 85 ? ? ? ? 48 8B CE", 0x1 ) );
 
 	g_ctx->m_local_pawn->m_movement_services( )->reset_prediction_command( );
 

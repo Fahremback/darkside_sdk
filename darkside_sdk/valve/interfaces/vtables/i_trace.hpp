@@ -157,7 +157,7 @@ public:
 	bool trace_shape( ray_t* ray, vec3_t start, vec3_t end, trace_filter_t* filter, game_trace_t* game_trace )
 	{
 		using fn_trace_shape = bool( __fastcall* )( i_trace*, ray_t*, vec3_t*, vec3_t*, trace_filter_t*, game_trace_t* );
-		static fn_trace_shape o_trace_shape = reinterpret_cast<fn_trace_shape>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name(), "E8 ? ? ? ? 80 7D ? ? 75 ? F3 0F 10 45", 0x1 ) );
+		static fn_trace_shape o_trace_shape = reinterpret_cast<fn_trace_shape>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name(), "E8 ? ? ? ? 80 7D ? ? 75 ? F3 0F 10 45 ? 48", 0x1 ) );
 
 		return o_trace_shape( this, ray, &start, &end, filter, game_trace );
 	}

@@ -19,20 +19,23 @@ void c_interfaces::initialize( ) {
 
 	const char* client_dll = g_modules->m_modules.client_dll.get_name( );
 
-	auto global_vars_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 89 0D ? ? ? ? 48 89 41" ), 0x3 );
+	// Updated signature for CS2 April 2026 - GlobalVars pattern
+	auto global_vars_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 89 05 ? ? ? ? 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B 0D" ), 0x3 );
 	m_global_vars = global_vars_addr ? *reinterpret_cast<i_global_vars**>( global_vars_addr ) : nullptr;
 	CHECK( xorstr_( "Global Vars" ), m_global_vars );
 
-	auto trace_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "4C 8B 3D ? ? ? ? 24 C9 0C 49 66 0F 7F 45 ?" ), 0x3 );
+	// Updated signature for CS2 April 2026 - Trace pattern
+	auto trace_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 8B 05 ? ? ? ? 48 89 45 ? 4C 8D 05 ? ? ? ?" ), 0x3 );
 	m_trace = trace_addr ? *reinterpret_cast<i_trace**>( trace_addr ) : nullptr;
 	CHECK( xorstr_( "Traces" ), m_trace );
 
-	auto entity_system_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 8B 0D ? ? ? ? 4C 8D 05 ? ? ? ? 48 8D 54 24 ? E8" ), 0x3 );
+	// Updated signature for CS2 April 2026 - EntitySystem pattern
+	auto entity_system_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 8B 05 ? ? ? ? 45 33 C0 48 89 45 ? 48 89 45 ?" ), 0x3 );
 	m_entity_system = entity_system_addr ? *reinterpret_cast<i_entity_system**>( entity_system_addr ) : nullptr;
 	CHECK( xorstr_( "Entity" ), m_entity_system );
 
 	using get_input_t = i_csgo_input * ( __fastcall* )( );
-	get_input_t get_input = reinterpret_cast<get_input_t>( g_opcodes->scan_absolute( client_dll, xorstr_( "E8 ? ? ? ? 48 8B 56 60" ), 0x1 ) );
+	get_input_t get_input = reinterpret_cast<get_input_t>( g_opcodes->scan_absolute( client_dll, xorstr_( "E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B 07" ), 0x1 ) );
 
 	CHECK( xorstr_( "Input" ), get_input )
 

@@ -11,7 +11,7 @@ class i_entity_system {
 public:
 	template <class C = c_base_entity>
 	C* get_base_entity( int index ) {
-		static auto get_client_entity = reinterpret_cast<C * ( __fastcall* )( i_entity_system*, int )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? C6 44 24", 0x1 ) );
+		static auto get_client_entity = reinterpret_cast<C * ( __fastcall* )( i_entity_system*, int )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? C6 44 24 ? 48", 0x1 ) );
 
 		return get_client_entity( this, index );
 	}

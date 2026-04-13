@@ -176,7 +176,8 @@ void hooks::update_global_vars::hk_update_global_vars( void* source_to_client, v
 
 	original( source_to_client, new_global_vars );
 
-	g_interfaces->m_global_vars = *reinterpret_cast<i_global_vars**>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "48 89 0D ? ? ? ? 48 89 41" ), 0x3 ) );
+	// Updated signature for CS2 April 2026 - GlobalVars pattern (hooks.cpp)
+	g_interfaces->m_global_vars = *reinterpret_cast<i_global_vars**>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "48 89 05 ? ? ? ? 48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8B 0D" ), 0x3 ) );
 }
 
 void* hooks::frame_stage_notify::hk_frame_stage_notify( void* source_to_client, int stage ) {
