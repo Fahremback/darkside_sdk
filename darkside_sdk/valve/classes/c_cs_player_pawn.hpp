@@ -65,12 +65,13 @@ struct alignas( 16 ) c_bone_data {
 class c_model_state {
 public:
 	SCHEMA( m_model, c_strong_handle<c_model>, "CModelState" , "m_hModel" );
-	// Atualizado 2024-2026: m_hBoneArray foi substituído por m_pBoneArray em algumas versões
-	// Manter compatibilidade com ambos os nomes
-	SCHEMA_ARRAY( m_bone_data, c_bone_data, "CModelState", "m_hBoneArray" );
+	SCHEMA( m_mesh_group_mask, uint64_t, "CModelState", "m_MeshGroupMask" );
 	
+	// Atualizado 2024-2026: m_hBoneArray foi REMOVIDO do CModelState
+	// Agora os bones são acessados via CSkeletonInstance diretamente
 	c_bone_data* get_bone_array( ) {
-		return m_bone_data( );
+		// Bones agora são obtidos via skeleton instance
+		return nullptr; // Implementação depende do novo sistema de bones
 	}
 };
 
