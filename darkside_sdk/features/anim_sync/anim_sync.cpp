@@ -60,7 +60,7 @@ void c_anim_sync::on_sequence_update( c_base_anim_graph* base_anim_graph ) {
 }
 
 float c_anim_sync::get_finished_cycle_rate( c_base_anim_graph* a1 ) {
-	static auto some_poop_func = reinterpret_cast<bool( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 84 C0 75 ? 0F 2F F7 72", 0x1 ) );
+	static auto some_poop_func = reinterpret_cast<bool( __fastcall* )( void* )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 84 C0 75 ? 0F 2F F7 72 ? 48 8B CE", 0x1 ) );
 
 	auto& v3 = a1->m_seq_fixed_cycle( );
 	auto& v5 = a1->m_playback_rate( );

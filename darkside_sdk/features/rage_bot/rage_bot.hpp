@@ -39,7 +39,7 @@ struct lag_record_t {
 		if ( !collision )
 			return;
 
-		static auto setup_bones = reinterpret_cast<void( __fastcall* )( void*, int )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 49 8B 96 ? ? ? ? 48 8B CE", 0x1 ) );
+		static auto setup_bones = reinterpret_cast<void( __fastcall* )( void*, int )>( g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), "E8 ? ? ? ? 49 8B 96 ? ? ? ? 48 8B CE E8", 0x1 ) );
 
 		m_pawn = pawn;
 
@@ -284,7 +284,7 @@ class c_rage_bot {
 	vec3_t get_removed_aim_punch_angle( c_cs_player_pawn* local_player ) {
 		using fnUpdateAnimPunch = void( __fastcall* )( void*, vec3_t*, float, bool );
 		static fnUpdateAnimPunch fn = reinterpret_cast<fnUpdateAnimPunch>(
-			g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ?? ?? ?? ?? F3 0F 10 44 24 ?? 48 8D 8D ?? ?? ?? ?? F3 0F 58 46" ), 0x1 ) );
+			g_opcodes->scan_absolute( g_modules->m_modules.client_dll.get_name( ), xorstr_( "E8 ? ? ? ? F3 0F 10 44 24 ? 48 8D 8D ? ? ? ? F3 0F 58 46" ), 0x1 ) );
 
 		vec3_t aim_punch = {};
 		fn( local_player, &aim_punch, 0.0f, true );
