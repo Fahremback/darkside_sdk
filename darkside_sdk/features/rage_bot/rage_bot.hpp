@@ -49,8 +49,8 @@ struct lag_record_t {
 		setup_bones( m_skeleton, 128 );
 
 		int bone_count = skeleton_instance->get_bone_count( );
-		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
-			std::memcpy( m_bone_data, skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).get_bone_array( ) ) {
+			std::memcpy( m_bone_data, skeleton_instance->m_model_state( ).get_bone_array( ), sizeof( matrix2x4_t ) * (std::min)( bone_count, 128 ) );
 		}
 
 		m_simulation_time = pawn->m_sim_time( );
@@ -74,9 +74,9 @@ struct lag_record_t {
 			return;
 
 		int bone_count = skeleton_instance->get_bone_count( );
-		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
-			std::memcpy( m_bone_data_backup, skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
-			std::memcpy( skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, m_bone_data, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).get_bone_array( ) ) {
+			std::memcpy( m_bone_data_backup, skeleton_instance->m_model_state( ).get_bone_array( ), sizeof( matrix2x4_t ) * (std::min)( bone_count, 128 ) );
+			std::memcpy( skeleton_instance->m_model_state( ).get_bone_array( ), m_bone_data, sizeof( matrix2x4_t ) * (std::min)( bone_count, 128 ) );
 		}
 	}
 
@@ -93,8 +93,8 @@ struct lag_record_t {
 			return;
 
 		int bone_count = skeleton_instance->get_bone_count( );
-		if ( bone_count > 0 && skeleton_instance->m_model_state( ).m_bone_data( ) ) {
-			std::memcpy( skeleton_instance->m_model_state( ).m_bone_data( )->m_elements, m_bone_data_backup, sizeof( matrix2x4_t ) * std::min( bone_count, 128 ) );
+		if ( bone_count > 0 && skeleton_instance->m_model_state( ).get_bone_array( ) ) {
+			std::memcpy( skeleton_instance->m_model_state( ).get_bone_array( ), m_bone_data_backup, sizeof( matrix2x4_t ) * (std::min)( bone_count, 128 ) );
 		}
 	}
 
@@ -220,7 +220,7 @@ class c_rage_bot {
 			return hitbox_data_t( );
 
 		const auto bone_index = player_pawn->get_bone_index( hitbox_data->m_bone_name );
-		const auto bones = model_state.get_bone_data( );
+		const auto bones = model_state.get_bone_array( );
 
 		hitbox_data_t hitbox;
 		hitbox.m_num_hitbox = hitbox_id;

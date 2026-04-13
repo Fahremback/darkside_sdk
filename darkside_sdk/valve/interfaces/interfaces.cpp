@@ -19,13 +19,16 @@ void c_interfaces::initialize( ) {
 
 	const char* client_dll = g_modules->m_modules.client_dll.get_name( );
 
-	m_global_vars = *reinterpret_cast<i_global_vars**>( g_opcodes->scan_absolute( client_dll, xorstr_( "48 89 0D ? ? ? ? 48 89 41" ), 0x3 ) );
+	auto global_vars_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 89 0D ? ? ? ? 48 89 41" ), 0x3 );
+	m_global_vars = global_vars_addr ? *reinterpret_cast<i_global_vars**>( global_vars_addr ) : nullptr;
 	CHECK( xorstr_( "Global Vars" ), m_global_vars );
 
-	m_trace = *reinterpret_cast<i_trace**>( g_opcodes->scan_absolute( client_dll, xorstr_( "4C 8B 3D ? ? ? ? 24 C9 0C 49 66 0F 7F 45 ?" ), 0x3 ) );
-	CHECK( xorstr_( "Traces" ), m_global_vars );
+	auto trace_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "4C 8B 3D ? ? ? ? 24 C9 0C 49 66 0F 7F 45 ?" ), 0x3 );
+	m_trace = trace_addr ? *reinterpret_cast<i_trace**>( trace_addr ) : nullptr;
+	CHECK( xorstr_( "Traces" ), m_trace );
 
-	m_entity_system = *reinterpret_cast<i_entity_system**>( g_opcodes->scan_absolute( client_dll, xorstr_( "48 8B 0D ? ? ? ? 4C 8D 05 ? ? ? ? 48 8D 54 24 ? E8" ), 0x3 ) );
+	auto entity_system_addr = g_opcodes->scan_absolute( client_dll, xorstr_( "48 8B 0D ? ? ? ? 4C 8D 05 ? ? ? ? 48 8D 54 24 ? E8" ), 0x3 );
+	m_entity_system = entity_system_addr ? *reinterpret_cast<i_entity_system**>( entity_system_addr ) : nullptr;
 	CHECK( xorstr_( "Entity" ), m_entity_system );
 
 	using get_input_t = i_csgo_input * ( __fastcall* )( );
@@ -37,7 +40,8 @@ void c_interfaces::initialize( ) {
 
 	auto random_float_fn = reinterpret_cast<decltype( m_random_float )>( m_random_float );
 
-	m_mem_alloc = *reinterpret_cast<i_mem_alloc**>( g_opcodes->export_fn( (std::size_t)g_modules->m_modules.tier0_dll.get( ), xorstr_( "g_pMemAlloc" ) ) );
+	auto mem_alloc_addr = g_opcodes->export_fn( (std::size_t)g_modules->m_modules.tier0_dll.get( ), xorstr_( "g_pMemAlloc" ) );
+	m_mem_alloc = mem_alloc_addr ? *reinterpret_cast<i_mem_alloc**>( mem_alloc_addr ) : nullptr;
 	CHECK( "Mem Alloc", m_mem_alloc );
 
 	m_random_float = reinterpret_cast<decltype( m_random_float )>( g_opcodes->export_fn( (std::size_t)g_modules->m_modules.tier0_dll.get( ), xorstr_( "RandomFloat" ) ) );

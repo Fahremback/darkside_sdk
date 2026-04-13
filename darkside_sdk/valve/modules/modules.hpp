@@ -76,7 +76,7 @@ public:
 	type_t as_fn( ) const
 	{
 		// c-style casts work everywhere so we use them
-		return reinterpret_cast<decltype( type_t )>( m_address );
+		return reinterpret_cast<type_t>( m_address );
 	}
 
 	template <typename type_t = c_address>

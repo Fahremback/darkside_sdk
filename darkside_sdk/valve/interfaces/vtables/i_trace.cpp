@@ -35,13 +35,13 @@ trace_filter_t::trace_filter_t( std::uint64_t mask, c_cs_player_pawn* entity, c_
 	{
 		m_skip_handles[ 0 ] = entity->get_handle( ).get_entry_index( );
 		m_skip_handles[ 2 ] = entity->get_owner_handle_index( );
-		m_arr_collisions[ 0 ] = entity->m_collision( )->get_collision_mask( );
+		m_arr_collisions[ 0 ] = entity->m_collision( )->m_collision_mask( );
 	}
 
 	if ( player != nullptr )
 	{
 		m_skip_handles[ 0 ] = player->get_handle( ).get_entry_index( );
 		m_skip_handles[ 2 ] = player->get_owner_handle_index( );
-		m_arr_collisions[ 0 ] = player->m_collision( )->get_collision_mask( );
+		m_arr_collisions[ 0 ] = player->m_collision( )->m_collision_mask( );
 	}
 }

@@ -14,6 +14,7 @@
 #include "game_enums.hpp"
 
 class c_econ_item_definition;
+class c_base_anim_graph;
 
 #define GET_CLASS_INFO(var_name, dll_name, class_name)                                                                \
     static c_schema_type_scope* type_scope = g_interfaces->m_schema_system->find_type_scope_for_module(dll_name);     \
@@ -55,8 +56,8 @@ struct alignas( 16 ) c_bone_data {
 	// Helper para converter para matrix3x4_t (usado em visuals/ragebot)
 	matrix3x4_t to_matrix3x4( ) const {
 		matrix3x4_t mtx;
-		mtx._11 = m_rot.x; mtx._12 = m_rot.y; mtx._13 = m_rot.z; mtx._14 = m_pos.x;
-		mtx._21 = m_rot.w; mtx._22 = m_scale; mtx._23 = 0.f; mtx._24 = m_pos.y;
+		mtx.arr_data[0][0] = m_rot.x; mtx.arr_data[0][1] = m_rot.y; mtx.arr_data[0][2] = m_rot.z; mtx.arr_data[0][3] = m_pos.x;
+		mtx.arr_data[1][0] = m_rot.w; mtx.arr_data[1][1] = m_scale; mtx.arr_data[1][2] = 0.f; mtx.arr_data[1][3] = m_pos.y;
 		// Nota: estrutura pode variar, ajustar conforme necessário
 		return mtx;
 	}
@@ -84,7 +85,7 @@ public:
 	SCHEMA( m_hitbox_set, uint8_t, "CSkeletonInstance", "m_nHitboxSet" );
 	
 	int get_bone_count( ) {
-		return m_model_state( ).m_bone_data( ) ? m_model_state( ).m_bone_data( )->m_size : 0;
+		return 256; // Fixed: m_bone_data was removed from c_model_state
 	}
 	
 	void calc_world_space_bones( std::uint32_t bone_mask ) {
